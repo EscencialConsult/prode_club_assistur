@@ -79,9 +79,9 @@ function ToastItem({ toast, onClose }) {
     },
     info: {
       bg: 'linear-gradient(135deg, #0c182b 0%, #0f2145 100%)',
-      border: 'rgba(235, 195, 43, 0.4)',
-      color: '#ebc32b',
-      iconBg: 'rgba(235, 195, 43, 0.15)',
+      border: 'rgba(78, 140, 255, 0.4)',
+      color: '#4e8cff',
+      iconBg: 'rgba(78, 140, 255, 0.15)',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" />
@@ -163,11 +163,11 @@ function ConfirmDialog({ opts, onResolve }) {
       ),
     },
     warning: {
-      iconBg: 'rgba(235, 195, 43, 0.15)',
-      iconColor: '#ebc32b',
-      btnBg: 'linear-gradient(135deg, #ebc32b 0%, #c99f16 100%)',
+      iconBg: 'rgba(78, 140, 255, 0.15)',
+      iconColor: '#4e8cff',
+      btnBg: 'linear-gradient(135deg, #4e8cff 0%, #0041f0 100%)',
       btnColor: '#05090f',
-      btnShadow: '0 6px 24px rgba(235,195,43,.35)',
+      btnShadow: '0 6px 24px rgba(78,140,255,.35)',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" />

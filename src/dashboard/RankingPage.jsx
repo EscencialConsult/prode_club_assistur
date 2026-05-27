@@ -23,7 +23,7 @@ function clasificar(p,ap) {
 
 const CAT_COLOR = {
   exacto:     '#22c55e',
-  diferencia: '#ebc32b',
+  diferencia: '#4e8cff',
   resultado:  '#94a3b8',
   cero:       '#f43f5e',
 }
@@ -46,7 +46,7 @@ const CSS = `
 .rk-row { display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;border-bottom:1px solid #f5f3ee;position:relative;transition:background .13s }
 .rk-row:hover { background:rgba(12,24,43,.03) }
 .rk-row.sel { background:#0c182b;border-bottom-color:rgba(255,255,255,.06) }
-.rk-row::before { content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;background:#ebc32b;border-radius:0 3px 3px 0;opacity:0;transition:opacity .13s }
+.rk-row::before { content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;background:#4e8cff;border-radius:0 3px 3px 0;opacity:0;transition:opacity .13s }
 .rk-row.sel::before { opacity:1 }
 
 /* Panel derecho */
@@ -91,9 +91,13 @@ export default function RankingPage() {
   const [expandido, setExpandido] = useState(null)
   const [detalles, setDetalles]   = useState({})
   const [q, setQ]                 = useState('')
+  // ── Ranking acumulado multi-apuesta ──────────────────────
+  const [selectedIds, setSelectedIds]       = useState(new Set())
+  const [tablaAcumulada, setTablaAcumulada] = useState([])
+  const [loadingAcum, setLoadingAcum]       = useState(false)
+  const modoAcumulado = selectedIds.size > 1
 
   async function cargarRanking(bet) {
-    if (sel?.id===bet.id) return
     setSel(bet); setLoading(true); setTabla([]); setMeta({}); setExpandido(null); setDetalles({}); setQ('')
     try {
       const [rT, rA] = await Promise.all([sheetsApi.predicciones.tabla(bet.id), sheetsApi.apuestas.obtener(bet.id)])
@@ -122,6 +126,61 @@ export default function RankingPage() {
     }
   }
 
+// ── Toggle checkbox ──────────────────────────────────────
+  function toggleBet(bet) {
+    let nextSize, nextId
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(bet.id)) next.delete(bet.id)
+      else next.add(bet.id)
+      nextSize = next.size
+      if (next.size === 1) nextId = [...next][0]
+      return next
+    })
+    setTablaAcumulada([])
+    setTimeout(() => {
+      if (nextSize === 0) {
+        setSel(null); setTabla([]); setMeta({})
+      } else if (nextSize === 1 && nextId) {
+        const sola = bets.find(b => b.id === nextId)
+        if (sola) cargarRanking(sola)
+      } else {
+        setSel(null); setTabla([]); setMeta({})
+      }
+    }, 20)
+  }
+
+  // ── Calcular ranking acumulado ───────────────────────────
+  async function cargarAcumulado() {
+    if (selectedIds.size < 2) return
+    setLoadingAcum(true); setTablaAcumulada([])
+    try {
+      const resultados = await Promise.all([...selectedIds].map(id => sheetsApi.predicciones.tabla(id)))
+      const mapa = {}
+      resultados.forEach(r => {
+        ;(r.tabla || []).forEach(u => {
+          if (!mapa[u.user_id]) mapa[u.user_id] = {
+            user_id: u.user_id, nombre: u.nombre,
+            puntos_totales: 0, predicciones: 0,
+            aciertos_exactos: 0, aciertos_diferencia: 0, aciertos_resultado: 0,
+          }
+          const e = mapa[u.user_id]
+          e.puntos_totales      += parseInt(u.puntos_totales)      || 0
+          e.predicciones        += parseInt(u.predicciones)        || 0
+          e.aciertos_exactos    += parseInt(u.aciertos_exactos)    || 0
+          e.aciertos_diferencia += parseInt(u.aciertos_diferencia) || 0
+          e.aciertos_resultado  += parseInt(u.aciertos_resultado)  || 0
+        })
+      })
+      setTablaAcumulada(
+        Object.values(mapa)
+          .sort((a,b) => b.puntos_totales - a.puntos_totales)
+          .map((u,i) => ({ ...u, posicion: i+1 }))
+      )
+    } catch(e) { alert('Error: '+e.message) }
+    finally { setLoadingAcum(false) }
+  }
+
   const filasFiltradas = useMemo(()=>{
     if (!q.trim()) return tabla
     return tabla.filter(u=>u.nombre?.toLowerCase().includes(q.toLowerCase()))
@@ -146,11 +205,36 @@ export default function RankingPage() {
           {/* ══ SIDEBAR OSCURO ══ */}
           <div className="rk-sidebar">
             {/* Header sidebar */}
-            <div style={{padding:'20px 16px 14px',borderBottom:'1px solid rgba(255,255,255,.06)'}}>
-              <p style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,letterSpacing:'.2em',color:'#94a3b8',margin:'0 0 10px'}}>APUESTAS</p>
-              <div style={{display:'flex',gap:6}}>
+            <div style={{padding:'16px 16px 12px',borderBottom:'1px solid #f0eadb'}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+                <p style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,letterSpacing:'.2em',color:'#94a3b8',margin:0}}>APUESTAS</p>
+                {selectedIds.size>0 && (
+                  <span style={{fontSize:9,fontWeight:700,background:'rgba(78,140,255,.15)',color:'#0041f0',border:'1px solid rgba(78,140,255,.3)',borderRadius:99,padding:'2px 8px'}}>
+                    {selectedIds.size} sel.
+                  </span>
+                )}
+              </div>
+              <div style={{display:'flex',gap:5,marginBottom:8}}>
                 <Pill color="#22c55e" label={`${bets.filter(b=>isOpen(b)).length} activas`}/>
                 <Pill color="#64748b" label={`${bets.filter(b=>!isOpen(b)).length} cerradas`}/>
+              </div>
+              <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                <button
+                  onClick={()=>{setSelectedIds(new Set(bets.map(b=>b.id)));setTablaAcumulada([]);setSel(null);setTabla([]);setMeta({})}}
+                  style={{fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',padding:'3px 8px',borderRadius:6,border:'1px solid #e0d8cc',background:'#fff',color:'#5f6e8a',cursor:'pointer',transition:'all .14s'}}
+                  onMouseEnter={e=>{e.currentTarget.style.borderColor='#0c182b';e.currentTarget.style.color='#0c182b'}}
+                  onMouseLeave={e=>{e.currentTarget.style.borderColor='#e0d8cc';e.currentTarget.style.color='#5f6e8a'}}>
+                  Selec. todas
+                </button>
+                {selectedIds.size>0 && (
+                  <button
+                    onClick={()=>{setSelectedIds(new Set());setSel(null);setTabla([]);setMeta({});setTablaAcumulada([])}}
+                    style={{fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',padding:'3px 8px',borderRadius:6,border:'1px solid rgba(224,50,82,.3)',background:'#fff',color:'#e03252',cursor:'pointer',transition:'all .14s'}}
+                    onMouseEnter={e=>e.currentTarget.style.background='rgba(224,50,82,.06)'}
+                    onMouseLeave={e=>e.currentTarget.style.background='#fff'}>
+                    Limpiar
+                  </button>
+                )}
               </div>
             </div>
 
@@ -164,13 +248,13 @@ export default function RankingPage() {
                   {bets.filter(b=>isOpen(b)).length>0 && (
                     <SideSection label="Activas" dot="#22c55e">
                       {bets.filter(b=>isOpen(b)).map(b=>(
-                        <BetRow key={b.id} bet={b} sel={sel?.id===b.id} onPick={cargarRanking}/>
+                        <BetRow key={b.id} bet={b} checked={selectedIds.has(b.id)} onToggle={toggleBet}/>
                       ))}
                     </SideSection>
                   )}
                   <SideSection label="Historial">
                     {bets.filter(b=>!isOpen(b)).map(b=>(
-                      <BetRow key={b.id} bet={b} sel={sel?.id===b.id} onPick={cargarRanking}/>
+                      <BetRow key={b.id} bet={b} checked={selectedIds.has(b.id)} onToggle={toggleBet}/>
                     ))}
                   </SideSection>
                 </>
@@ -181,9 +265,34 @@ export default function RankingPage() {
           {/* ══ CONTENIDO DERECHO ══ */}
           <div className="rk-content" style={{padding:'24px 32px 32px'}}>
 
-            {!sel ? (
+            {selectedIds.size===0 ? (
               <EmptySelect/>
-            ) : (
+            ) : modoAcumulado && tablaAcumulada.length===0 && !loadingAcum ? (
+              <PromptAcumulado count={selectedIds.size} onCalcular={cargarAcumulado}/>
+            ) : modoAcumulado ? (
+              <div className="rk-in">
+                <BannerAcumulado count={selectedIds.size} bets={bets} selectedIds={selectedIds}/>
+                {loadingAcum ? <SkeletonContent/> : (
+                  <>
+                    {tablaAcumulada.length>0 && (
+                      <Podio top={tablaAcumulada.slice(0,3)} miId={null} esAdmin={false}
+                        expandido={null} detalles={{}} apuesta={null} onToggle={()=>{}}/>
+                    )}
+                    {tablaAcumulada.length>3 && (
+                      <TablaResto filas={tablaAcumulada.slice(3)} offset={3} tabla={tablaAcumulada}
+                        hayQ={false} miId={user?.id} esAdmin={false}
+                        expandido={null} detalles={{}} apuesta={null} onToggle={()=>{}}/>
+                    )}
+                    {tablaAcumulada.length>0 && (
+                      <div style={{textAlign:'center',paddingTop:12,borderTop:'1px solid #e8e3db',marginTop:12,fontSize:10,color:'#94a3b8'}}>
+                        {tablaAcumulada.length} participantes · suma de {selectedIds.size} apuestas
+                      </div>
+                    )}
+                    {tablaAcumulada.length===0 && <SinParticipantes/>}
+                  </>
+                )}
+              </div>
+            ) : sel ? (
               <div className="rk-in">
 
                 {/* Banner */}
@@ -234,6 +343,8 @@ export default function RankingPage() {
                   </>
                 )}
               </div>
+            ) : (
+              <EmptySelect/>
             )}
           </div>
         </div>
@@ -265,26 +376,23 @@ function SideSection({ label, dot, children }) {
   )
 }
 
-function BetRow({ bet, sel, onPick }) {
-  const open = isOpen(bet)
-  const fin  = bet.estado==='finalizada'
-  const col  = fin?'#ebc32b':open?'#22c55e':'#475569'
+function BetRow({ bet, checked, onToggle }) {
+  const open  = isOpen(bet)
+  const fin   = bet.estado==='finalizada'
+  const col   = fin?'#4e8cff':open?'#22c55e':'#475569'
   const parts = bet.partidos_ids?bet.partidos_ids.split(',').filter(Boolean).length:0
   return (
-    <div className={`rk-row${sel?' sel':''}`} onClick={()=>onPick(bet)}>
-      {/* Dot estado */}
-      <div style={{width:7,height:7,borderRadius:'50%',background:col,flexShrink:0,boxShadow:open?`0 0 6px ${col}`:sel?`0 0 4px ${col}`:'none'}}/>
-      <div style={{flex:1,minWidth:0}}>
-        <p style={{fontSize:12,fontWeight:600,color:sel?'#fff':'#0c182b',margin:'0 0 2px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-          {bet.titulo}
-        </p>
-        <p style={{fontSize:10,color:'#94a3b8',margin:0}}>
-          {bet.participantes||0} part · {parts} partidos
-        </p>
+    <div className={`rk-row${checked?' sel':''}`} onClick={()=>onToggle(bet)} style={{userSelect:'none'}}>
+      {/* Checkbox visual */}
+      <div style={{width:16,height:16,borderRadius:4,flexShrink:0,border:`2px solid ${checked?'#4e8cff':'#d1c9bc'}`,background:checked?'#4e8cff':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}>
+        {checked && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#0c182b" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
       </div>
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={sel?'#ebc32b':'#c8d0dc'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="9 18 15 12 9 6"/>
-      </svg>
+      {/* Dot estado */}
+      <div style={{width:6,height:6,borderRadius:'50%',background:col,flexShrink:0,boxShadow:open?`0 0 5px ${col}`:'none'}}/>
+      <div style={{flex:1,minWidth:0}}>
+        <p style={{fontSize:12,fontWeight:600,color:checked?'#fff':'#0c182b',margin:'0 0 2px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{bet.titulo}</p>
+        <p style={{fontSize:10,color:'#94a3b8',margin:0}}>{bet.participantes||0} part · {parts} partidos</p>
+      </div>
     </div>
   )
 }
@@ -296,23 +404,23 @@ function Banner({ apuesta, meta, loading }) {
   return (
     <div style={{borderRadius:14,marginBottom:24,background:'linear-gradient(125deg,#0c182b 0%,#1a3060 100%)',padding:'18px 22px',position:'relative',overflow:'hidden'}}>
       {/* glow deco */}
-      <div style={{position:'absolute',top:-30,right:-30,width:180,height:180,borderRadius:'50%',background:'rgba(235,195,43,.08)',pointerEvents:'none'}}/>
-      <div style={{position:'absolute',bottom:-40,right:80,width:120,height:120,borderRadius:'50%',background:'rgba(235,195,43,.05)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',top:-30,right:-30,width:180,height:180,borderRadius:'50%',background:'rgba(78,140,255,.08)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',bottom:-40,right:80,width:120,height:120,borderRadius:'50%',background:'rgba(78,140,255,.05)',pointerEvents:'none'}}/>
 
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:16,position:'relative'}}>
         <div>
-          <span style={{fontSize:9,fontWeight:800,textTransform:'uppercase',letterSpacing:'.22em',color:'rgba(235,195,43,.55)',display:'block',marginBottom:4}}>
+          <span style={{fontSize:9,fontWeight:800,textTransform:'uppercase',letterSpacing:'.22em',color:'rgba(78,140,255,.55)',display:'block',marginBottom:4}}>
             TABLA DE POSICIONES
           </span>
           <h2 style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'clamp(22px,3vw,32px)',color:'#fff',margin:'0 0 6px',letterSpacing:'.02em',lineHeight:1}}>
             {apuesta.titulo}
           </h2>
           {apuesta.premio && (
-            <div style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(235,195,43,.1)',border:'1px solid rgba(235,195,43,.2)',borderRadius:99,padding:'3px 10px'}}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ebc32b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(78,140,255,.1)',border:'1px solid rgba(78,140,255,.2)',borderRadius:99,padding:'3px 10px'}}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4e8cff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
               </svg>
-              <span style={{fontSize:10,color:'rgba(235,195,43,.8)',fontWeight:600}}>{apuesta.premio}</span>
+              <span style={{fontSize:10,color:'rgba(78,140,255,.8)',fontWeight:600}}>{apuesta.premio}</span>
             </div>
           )}
         </div>
@@ -331,7 +439,7 @@ function Banner({ apuesta, meta, loading }) {
 function BannerStat({ n, label, gold }) {
   return (
     <div style={{textAlign:'center'}}>
-      <p style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:gold?'#ebc32b':'rgba(255,255,255,.9)',margin:'0 0 1px',lineHeight:1}}>{n}</p>
+      <p style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:gold?'#4e8cff':'rgba(255,255,255,.9)',margin:'0 0 1px',lineHeight:1}}>{n}</p>
       <p style={{fontSize:9,textTransform:'uppercase',letterSpacing:'.14em',color:'rgba(255,255,255,.35)',margin:0}}>{label}</p>
     </div>
   )
@@ -348,7 +456,7 @@ function Buscador({ q, setQ }) {
       </svg>
       <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar participante..."
         style={{width:'100%',paddingLeft:28,paddingRight:q?28:10,paddingTop:7,paddingBottom:7,borderRadius:99,border:'1.5px solid #e2ddd6',background:'#fff',fontFamily:"'DM Sans',sans-serif",fontSize:12,color:'#0c182b',outline:'none',boxSizing:'border-box',transition:'border-color .15s'}}
-        onFocus={e=>e.target.style.borderColor='rgba(235,195,43,.6)'}
+        onFocus={e=>e.target.style.borderColor='rgba(78,140,255,.6)'}
         onBlur={e=>e.target.style.borderColor='#e2ddd6'}
       />
       {q && (
@@ -364,7 +472,7 @@ function Buscador({ q, setQ }) {
    PODIO
 ══════════════════════════════════════════ */
 const PODIO_CFG = {
-  0: { grad:'linear-gradient(145deg,#f5d75a 0%,#c99f16 100%)', shadow:'rgba(235,195,43,.5)', border:'rgba(235,195,43,.7)', ring:'rgba(235,195,43,.3)', emoji:'🥇', label:'1°' },
+  0: { grad:'linear-gradient(145deg,#4e8cff 0%,#0041f0 100%)', shadow:'rgba(78,140,255,.5)', border:'rgba(78,140,255,.7)', ring:'rgba(78,140,255,.3)', emoji:'🥇', label:'1°' },
   1: { grad:'linear-gradient(145deg,#e2e8f0 0%,#94a3b8 100%)', shadow:'rgba(148,163,184,.4)', border:'rgba(148,163,184,.5)', ring:'rgba(148,163,184,.2)', emoji:'🥈', label:'2°' },
   2: { grad:'linear-gradient(145deg,#fed7aa 0%,#c2720e 100%)', shadow:'rgba(194,114,14,.4)',  border:'rgba(194,114,14,.5)',  ring:'rgba(194,114,14,.2)',  emoji:'🥉', label:'3°' },
 }
@@ -405,17 +513,17 @@ function Podio({ top, miId, esAdmin, expandido, detalles, apuesta, onToggle }) {
               onClick={puede?()=>onToggle(u.user_id):undefined}
               style={{
                 background:'#fff',
-                border:`${isTop||isExp?2:1.5}px solid ${isExp?'#ebc32b':isTop?cfg.border:'#e8e3db'}`,
+                border:`${isTop||isExp?2:1.5}px solid ${isExp?'#4e8cff':isTop?cfg.border:'#e8e3db'}`,
                 padding: isTop ? '20px 14px 14px' : '16px 12px 12px',
                 boxShadow: isTop
                   ? `0 0 0 4px ${cfg.ring}, 0 12px 40px ${cfg.shadow}`
-                  : isExp ? `0 0 0 3px rgba(235,195,43,.2)` : '0 2px 12px rgba(12,24,43,.06)',
+                  : isExp ? `0 0 0 3px rgba(78,140,255,.2)` : '0 2px 12px rgba(12,24,43,.06)',
                 cursor: puede ? 'pointer' : 'default',
               }}>
 
               {/* Badge posición */}
               {isTop && (
-                <div style={{position:'absolute',top:-13,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(90deg,#c99f16,#ebc32b)',color:'#fff',fontSize:8,fontWeight:800,letterSpacing:'.16em',textTransform:'uppercase',padding:'3px 14px',borderRadius:99,whiteSpace:'nowrap',boxShadow:'0 2px 10px rgba(235,195,43,.5)'}}>
+                <div style={{position:'absolute',top:-13,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(90deg,#0041f0,#4e8cff)',color:'#fff',fontSize:8,fontWeight:800,letterSpacing:'.16em',textTransform:'uppercase',padding:'3px 14px',borderRadius:99,whiteSpace:'nowrap',boxShadow:'0 2px 10px rgba(78,140,255,.5)'}}>
                   ★ LÍDER
                 </div>
               )}
@@ -449,11 +557,11 @@ function Podio({ top, miId, esAdmin, expandido, detalles, apuesta, onToggle }) {
 
               {/* Puntos — el elemento más importante */}
               <div style={{
-                background: isTop ? 'linear-gradient(135deg,rgba(235,195,43,.12),rgba(235,195,43,.06))' : 'rgba(12,24,43,.04)',
-                border: isTop ? '1px solid rgba(235,195,43,.25)' : '1px solid #f0eadb',
+                background: isTop ? 'linear-gradient(135deg,rgba(78,140,255,.12),rgba(78,140,255,.06))' : 'rgba(12,24,43,.04)',
+                border: isTop ? '1px solid rgba(78,140,255,.25)' : '1px solid #f0eadb',
                 borderRadius:10, padding:'8px 0',
               }}>
-                <p style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:isTop?36:28,color:isTop?'#c99f16':'#0c182b',margin:0,lineHeight:1}}>
+                <p style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:isTop?36:28,color:isTop?'#0041f0':'#0c182b',margin:0,lineHeight:1}}>
                   {u.puntos_totales}
                 </p>
                 <p style={{fontSize:8,fontWeight:700,textTransform:'uppercase',letterSpacing:'.14em',color:'#94a3b8',margin:'2px 0 0'}}>puntos</p>
@@ -461,9 +569,9 @@ function Podio({ top, miId, esAdmin, expandido, detalles, apuesta, onToggle }) {
 
               {/* CTA */}
               {puede && (
-                <button style={{marginTop:10,background:'transparent',border:'none',cursor:'pointer',fontSize:10,fontWeight:700,color:isExp?'#c99f16':'#94a3b8',display:'flex',alignItems:'center',justifyContent:'center',gap:3,width:'100%',padding:'4px 0',transition:'color .14s'}}
-                  onMouseEnter={e=>e.currentTarget.style.color='#c99f16'}
-                  onMouseLeave={e=>e.currentTarget.style.color=isExp?'#c99f16':'#94a3b8'}>
+                <button style={{marginTop:10,background:'transparent',border:'none',cursor:'pointer',fontSize:10,fontWeight:700,color:isExp?'#0041f0':'#94a3b8',display:'flex',alignItems:'center',justifyContent:'center',gap:3,width:'100%',padding:'4px 0',transition:'color .14s'}}
+                  onMouseEnter={e=>e.currentTarget.style.color='#0041f0'}
+                  onMouseLeave={e=>e.currentTarget.style.color=isExp?'#0041f0':'#94a3b8'}>
                   {isExp?'Ocultar detalle':'Ver detalle'}
                   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                     style={{transform:isExp?'rotate(180deg)':'none',transition:'transform .2s'}}>
@@ -525,25 +633,25 @@ function TablaResto({ filas, offset, tabla, hayQ, miId, esAdmin, expandido, deta
                 style={{
                   display:'grid',gridTemplateColumns:'44px 1fr 100px 68px 18px',
                   padding:'11px 16px',gap:8,alignItems:'center',
-                  background:me?'rgba(235,195,43,.04)':isExp?'rgba(12,24,43,.015)':'#fff',
+                  background:me?'rgba(78,140,255,.04)':isExp?'rgba(12,24,43,.015)':'#fff',
                   cursor:puede?'pointer':'default',
                 }}>
 
                 {/* Posición */}
-                <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:pos<=3?'#ebc32b':'#c8d0dc',lineHeight:1}}>{pos}</span>
+                <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:pos<=3?'#4e8cff':'#c8d0dc',lineHeight:1}}>{pos}</span>
 
                 {/* Participante */}
                 <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
                   <div style={{
                     width:34,height:34,borderRadius:'50%',flexShrink:0,
-                    background:me?'linear-gradient(135deg,#ebc32b,#c99f16)':'linear-gradient(135deg,#e2e8f0,#cbd5e1)',
+                    background:me?'linear-gradient(135deg,#4e8cff,#0041f0)':'linear-gradient(135deg,#e2e8f0,#cbd5e1)',
                     display:'flex',alignItems:'center',justifyContent:'center',
                     fontFamily:"'Bebas Neue',sans-serif",fontSize:13,
                     color:me?'#0c182b':'#64748b',
-                    boxShadow:me?'0 0 0 2px rgba(235,195,43,.3)':'none',
+                    boxShadow:me?'0 0 0 2px rgba(78,140,255,.3)':'none',
                   }}>{initials(u.nombre)}</div>
                   <div style={{minWidth:0}}>
-                    <p style={{fontWeight:me?700:600,fontSize:13,color:me?'#c99f16':'#0c182b',margin:'0 0 1px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                    <p style={{fontWeight:me?700:600,fontSize:13,color:me?'#0041f0':'#0c182b',margin:'0 0 1px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                       {u.nombre}
                       {me&&<span style={{fontSize:10,color:'#94a3b8',fontWeight:400,marginLeft:4}}>(vos)</span>}
                     </p>
@@ -553,7 +661,7 @@ function TablaResto({ filas, offset, tabla, hayQ, miId, esAdmin, expandido, deta
 
                 {/* Aciertos */}
                 <div className="rk-hide-mob" style={{display:'flex',justifyContent:'center',gap:8}}>
-                  {[['#22c55e',u.aciertos_exactos,'Exactos'],['#ebc32b',u.aciertos_diferencia||0,'Dif.'],['#94a3b8',u.aciertos_resultado,'Res.']].map(([c,n,t])=>(
+                  {[['#22c55e',u.aciertos_exactos,'Exactos'],['#4e8cff',u.aciertos_diferencia||0,'Dif.'],['#94a3b8',u.aciertos_resultado,'Res.']].map(([c,n,t])=>(
                     <span key={t} title={t} style={{display:'inline-flex',alignItems:'center',gap:3,fontSize:11,fontWeight:600,color:n>0?c:'#cbd5e1'}}>
                       <span style={{width:6,height:6,borderRadius:'50%',background:n>0?c:'#e2e8f0',display:'inline-block'}}/>
                       {n}
@@ -569,7 +677,7 @@ function TablaResto({ filas, offset, tabla, hayQ, miId, esAdmin, expandido, deta
 
                 {/* Chevron */}
                 {puede
-                  ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isExp?'#ebc32b':'#cbd5e1'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{transform:isExp?'rotate(180deg)':'none',transition:'transform .2s'}}>
+                  ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isExp?'#4e8cff':'#cbd5e1'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{transform:isExp?'rotate(180deg)':'none',transition:'transform .2s'}}>
                       <polyline points="6 9 12 15 18 9"/>
                     </svg>
                   : <span/>
@@ -598,9 +706,9 @@ function DetallePanel({ nombre, det, apuesta, onClose, inline, style: extraStyle
   const base = {
     borderRadius: inline?0:14,
     overflow:'hidden',
-    border: inline ? 'none' : '2px solid rgba(235,195,43,.4)',
-    borderTop: inline ? '2px solid rgba(235,195,43,.25)' : undefined,
-    boxShadow: inline ? 'none' : '0 4px 24px rgba(235,195,43,.1)',
+    border: inline ? 'none' : '2px solid rgba(78,140,255,.4)',
+    borderTop: inline ? '2px solid rgba(78,140,255,.25)' : undefined,
+    boxShadow: inline ? 'none' : '0 4px 24px rgba(78,140,255,.1)',
     animation:'rk-in .22s ease both',
     ...extraStyle,
   }
@@ -608,7 +716,7 @@ function DetallePanel({ nombre, det, apuesta, onClose, inline, style: extraStyle
   const loadingUI = (
     <div style={base}>
       <div style={{background:'#0c182b',padding:'10px 16px',display:'flex',alignItems:'center',gap:8}}>
-        <span style={{fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.14em',color:'rgba(235,195,43,.7)'}}>Cargando…</span>
+        <span style={{fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.14em',color:'rgba(78,140,255,.7)'}}>Cargando…</span>
       </div>
       <div style={{background:'#faf7f0',padding:'12px 14px',display:'flex',flexDirection:'column',gap:4}}>
         {[1,2,3].map(i=><div key={i} className="rk-sk" style={{height:42}}/>)}
@@ -643,10 +751,10 @@ function DetallePanel({ nombre, det, apuesta, onClose, inline, style: extraStyle
       {/* Header */}
       <div style={{background:'linear-gradient(90deg,#0c182b,#17376a)',padding:'10px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
-          <div style={{width:24,height:24,borderRadius:6,background:'rgba(235,195,43,.15)',border:'1px solid rgba(235,195,43,.25)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Bebas Neue',sans-serif",fontSize:10,color:'#ebc32b'}}>
+          <div style={{width:24,height:24,borderRadius:6,background:'rgba(78,140,255,.15)',border:'1px solid rgba(78,140,255,.25)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Bebas Neue',sans-serif",fontSize:10,color:'#4e8cff'}}>
             {initials(nombre)}
           </div>
-          <span style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.12em',color:'rgba(235,195,43,.85)'}}>{nombre}</span>
+          <span style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.12em',color:'rgba(78,140,255,.85)'}}>{nombre}</span>
         </div>
         <CloseBtn onClick={onClose}/>
       </div>
@@ -656,7 +764,7 @@ function DetallePanel({ nombre, det, apuesta, onClose, inline, style: extraStyle
         {/* Resumen chips */}
         {det.preds?.length>0 && (
           <div style={{display:'flex',gap:6,marginBottom:12,flexWrap:'wrap',alignItems:'center'}}>
-            {[['exacto','#22c55e','Exactos'],['diferencia','#ebc32b','Diferencia'],['resultado','#94a3b8','Resultado'],['fallos','#f43f5e','Fallos']].map(([k,c,l])=>resumen[k]>0&&(
+            {[['exacto','#22c55e','Exactos'],['diferencia','#4e8cff','Diferencia'],['resultado','#94a3b8','Resultado'],['fallos','#f43f5e','Fallos']].map(([k,c,l])=>resumen[k]>0&&(
               <span key={k} style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 9px',borderRadius:99,background:`${c}12`,border:`1px solid ${c}25`,fontSize:10,fontWeight:700,color:c}}>
                 <span style={{width:5,height:5,borderRadius:'50%',background:c,display:'inline-block'}}/>
                 {resumen[k]} {l}
@@ -733,7 +841,7 @@ function FilaPartido({ partido, pred, apuesta }) {
       <div style={{textAlign:'center'}}>
         <p style={{fontSize:7,fontWeight:700,textTransform:'uppercase',letterSpacing:'.12em',color:'#b8c0cc',margin:'0 0 1px'}}>Pred.</p>
         {pred
-          ? <p style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,color:'#c99f16',margin:0,lineHeight:1}}>{pred.pred_local}-{pred.pred_visitante}</p>
+          ? <p style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,color:'#0041f0',margin:0,lineHeight:1}}>{pred.pred_local}-{pred.pred_visitante}</p>
           : <p style={{fontSize:10,color:'#b8c0cc',margin:0,fontStyle:'italic'}}>—</p>
         }
       </div>
@@ -766,26 +874,26 @@ function FilaPartido({ partido, pred, apuesta }) {
 function MiPosicion({ pos, apuesta, expandida, detalle, onToggle }) {
   return (
     <div style={{position:'sticky',bottom:12,marginTop:12,zIndex:10}}>
-      <div style={{borderRadius:13,overflow:'hidden',boxShadow:'0 8px 32px rgba(12,24,43,.28)',border:'2px solid rgba(235,195,43,.45)'}}>
+      <div style={{borderRadius:13,overflow:'hidden',boxShadow:'0 8px 32px rgba(12,24,43,.28)',border:'2px solid rgba(78,140,255,.45)'}}>
         <div onClick={onToggle} style={{
           display:'grid',gridTemplateColumns:'44px 1fr 100px 68px 18px',
           padding:'10px 16px',gap:8,alignItems:'center',
           background:'linear-gradient(90deg,#0c182b,#17376a)',cursor:'pointer',
         }}>
-          <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:'#ebc32b'}}>#{pos.posicion}</span>
+          <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:'#4e8cff'}}>#{pos.posicion}</span>
           <div style={{display:'flex',alignItems:'center',gap:8,minWidth:0}}>
-            <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#ebc32b,#c99f16)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Bebas Neue',sans-serif",fontSize:12,color:'#0c182b',flexShrink:0}}>
+            <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#4e8cff,#0041f0)',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:"'Bebas Neue',sans-serif",fontSize:12,color:'#0c182b',flexShrink:0}}>
               {initials(pos.nombre)}
             </div>
             <div style={{minWidth:0}}>
               <p style={{fontWeight:700,fontSize:13,color:'#fff',margin:'0 0 1px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                {pos.nombre}<span style={{fontSize:10,color:'#ebc32b',fontWeight:400,marginLeft:4}}>(vos)</span>
+                {pos.nombre}<span style={{fontSize:10,color:'#4e8cff',fontWeight:400,marginLeft:4}}>(vos)</span>
               </p>
               <p style={{fontSize:10,color:'rgba(255,255,255,.4)',margin:0}}>{pos.predicciones} predicciones</p>
             </div>
           </div>
           <div className="rk-hide-mob" style={{display:'flex',justifyContent:'center',gap:8}}>
-            {[['#22c55e',pos.aciertos_exactos],['#ebc32b',pos.aciertos_diferencia||0],['rgba(255,255,255,.45)',pos.aciertos_resultado]].map(([c,n],i)=>(
+            {[['#22c55e',pos.aciertos_exactos],['#4e8cff',pos.aciertos_diferencia||0],['rgba(255,255,255,.45)',pos.aciertos_resultado]].map(([c,n],i)=>(
               <span key={i} style={{display:'inline-flex',alignItems:'center',gap:3,fontSize:11,fontWeight:600,color:n>0?c:'rgba(255,255,255,.2)'}}>
                 <span style={{width:6,height:6,borderRadius:'50%',background:n>0?c:'rgba(255,255,255,.1)',display:'inline-block'}}/>
                 {n}
@@ -793,10 +901,10 @@ function MiPosicion({ pos, apuesta, expandida, detalle, onToggle }) {
             ))}
           </div>
           <div style={{textAlign:'center'}}>
-            <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:'#ebc32b'}}>{pos.puntos_totales}</span>
+            <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:'#4e8cff'}}>{pos.puntos_totales}</span>
             <span style={{fontSize:8,color:'rgba(255,255,255,.3)',marginLeft:2,letterSpacing:'.1em',fontWeight:700,display:'block'}}>PTS</span>
           </div>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ebc32b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#4e8cff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
             style={{transform:expandida?'rotate(180deg)':'none',transition:'transform .2s'}}>
             <polyline points="6 9 12 15 18 9"/>
           </svg>
@@ -819,7 +927,7 @@ function LeyendaPuntos({ apuesta, total, mostrando }) {
   return (
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8,fontSize:10,color:'#94a3b8',paddingTop:12,borderTop:'1px solid #e8e3db',marginTop:12}}>
       <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
-        {[['#22c55e',`Exacto +${e}pts`],['#ebc32b',`Diferencia +${d}pts`],['#94a3b8',`Resultado +${r}pt${r===1?'':'s'}`],['#f43f5e','Sin acierto 0pts']].map(([c,l])=>(
+        {[['#22c55e',`Exacto +${e}pts`],['#4e8cff',`Diferencia +${d}pts`],['#94a3b8',`Resultado +${r}pt${r===1?'':'s'}`],['#f43f5e','Sin acierto 0pts']].map(([c,l])=>(
           <span key={l} style={{display:'inline-flex',alignItems:'center',gap:5}}>
             <span style={{width:7,height:7,borderRadius:'50%',background:c,display:'inline-block'}}/>
             {l}
@@ -835,7 +943,7 @@ function EmptySelect() {
   return (
     <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:40,textAlign:'center',gap:20}}>
       <div style={{width:80,height:80,borderRadius:24,background:'linear-gradient(145deg,#0c182b,#1a3060)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 12px 40px rgba(12,24,43,.2)'}}>
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(235,195,43,.6)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(78,140,255,.6)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
       </div>
@@ -846,7 +954,7 @@ function EmptySelect() {
       {/* Deco podio skeleton */}
       <div style={{display:'flex',gap:8,alignItems:'flex-end',opacity:.15,marginTop:8,pointerEvents:'none'}}>
         {[80,110,80].map((h,i)=>(
-          <div key={i} style={{width:56,height:h,borderRadius:12,background:`linear-gradient(180deg,${i===1?'#ebc32b':'#cbd5e1'},transparent)`}}/>
+          <div key={i} style={{width:56,height:h,borderRadius:12,background:`linear-gradient(180deg,${i===1?'#4e8cff':'#cbd5e1'},transparent)`}}/>
         ))}
       </div>
     </div>
@@ -884,6 +992,60 @@ function SkeletonContent() {
       <div style={{borderRadius:14,overflow:'hidden',border:'1.5px solid #e8e3db'}}>
         <div className="rk-sk" style={{height:38,borderRadius:0}}/>
         {[1,2,3,4].map(i=><div key={i} className="rk-sk" style={{height:56,borderRadius:0,marginTop:1,animationDelay:`${i*.07}s`}}/>)}
+      </div>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════
+   BANNER ACUMULADO
+══════════════════════════════════════════ */
+function BannerAcumulado({ count, bets, selectedIds }) {
+  const nombres = bets.filter(b=>selectedIds.has(b.id)).map(b=>b.titulo)
+  return (
+    <div style={{borderRadius:14,marginBottom:24,background:'linear-gradient(125deg,#0c182b 0%,#1a3060 100%)',padding:'18px 22px',position:'relative',overflow:'hidden'}}>
+      <div style={{position:'absolute',top:-30,right:-30,width:180,height:180,borderRadius:'50%',background:'rgba(78,140,255,.08)',pointerEvents:'none'}}/>
+      <span style={{fontSize:9,fontWeight:800,textTransform:'uppercase',letterSpacing:'.22em',color:'rgba(78,140,255,.55)',display:'block',marginBottom:4}}>
+        RANKING ACUMULADO
+      </span>
+      <h2 style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:'clamp(20px,3vw,28px)',color:'#fff',margin:'0 0 10px',letterSpacing:'.02em',lineHeight:1}}>
+        SUMA DE {count} APUESTAS
+      </h2>
+      <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+        {nombres.map((n,i)=>(
+          <span key={i} style={{fontSize:9,fontWeight:600,background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.12)',borderRadius:99,padding:'2px 8px',color:'rgba(255,255,255,.6)'}}>
+            {n}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════
+   PROMPT ACUMULADO (pantalla intermedia)
+══════════════════════════════════════════ */
+function PromptAcumulado({ count, onCalcular }) {
+  return (
+    <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:40,textAlign:'center',gap:20}}>
+      <div style={{width:80,height:80,borderRadius:24,background:'linear-gradient(145deg,#0c182b,#1a3060)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 12px 40px rgba(12,24,43,.2)'}}>
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(78,140,255,.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+        </svg>
+      </div>
+      <div>
+        <p style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:'#0c182b',margin:'0 0 6px',letterSpacing:'.04em'}}>
+          {count} APUESTAS SELECCIONADAS
+        </p>
+        <p style={{fontSize:13,color:'#94a3b8',margin:'0 0 20px',lineHeight:1.6}}>
+          Los puntos de todas se van a sumar<br/>para determinar el ganador final.
+        </p>
+        <button onClick={onCalcular}
+          style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:14,padding:'12px 28px',borderRadius:99,background:'#0c182b',color:'#4e8cff',border:'none',cursor:'pointer',boxShadow:'0 4px 16px rgba(12,24,43,.2)',transition:'all .16s'}}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 8px 28px rgba(12,24,43,.3)'}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 4px 16px rgba(12,24,43,.2)'}}>
+          Calcular Ranking Acumulado
+        </button>
       </div>
     </div>
   )

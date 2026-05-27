@@ -18,11 +18,11 @@ const STATE_STYLES = {
     bg: 'rgba(66,91,139,.18)',
   },
   finalizada: {
-    border: 'rgba(235,195,43,.35)',
-    glow: '0 0 24px rgba(235,195,43,.08)',
+    border: 'rgba(78,140,255,.35)',
+    glow: '0 0 24px rgba(78,140,255,.08)',
     label: 'FINALIZADA',
-    color: '#c99f16',
-    bg: 'rgba(235,195,43,.1)',
+    color: '#0041f0',
+    bg: 'rgba(78,140,255,.1)',
   },
   cerrada: {
     border: 'rgba(30,59,110,.65)',
@@ -172,8 +172,8 @@ export default function BetCard({ bet, predictionsMap, onPredict }) {
             {isPro && (esGrupal ? (
               <Pill
                 color="var(--color-warn)"
-                bg="rgba(244,180,42,0.12)"
-                border="rgba(244,180,42,0.4)"
+                bg="rgba(78,140,255,0.12)"
+                border="rgba(78,140,255,0.4)"
               >
                 Grupal
               </Pill>
@@ -210,8 +210,8 @@ export default function BetCard({ bet, predictionsMap, onPredict }) {
           <div
             className="flex items-start gap-2.5 mb-4 px-3 py-2.5 rounded-lg"
             style={{
-              background: 'rgba(244,180,42,0.08)',
-              border: '1px solid rgba(244,180,42,0.25)',
+              background: 'rgba(78,140,255,0.08)',
+              border: '1px solid rgba(78,140,255,0.25)',
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-warn)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5">
@@ -252,7 +252,7 @@ export default function BetCard({ bet, predictionsMap, onPredict }) {
             className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg"
             style={{
               background: 'rgba(2,15,39,0.5)',
-              border: `1px solid ${isClosingSoon ? 'rgba(244,180,42,0.3)' : 'rgba(34,217,223,0.2)'}`,
+              border: `1px solid ${isClosingSoon ? 'rgba(78,140,255,0.3)' : 'rgba(34,217,223,0.2)'}`,
             }}
           >
             <div style={{ color: isClosingSoon ? 'var(--color-warn)' : 'var(--color-accent)' }}>
@@ -367,13 +367,13 @@ export default function BetCard({ bet, predictionsMap, onPredict }) {
           <div
             className="flex items-center gap-3 px-4 py-3 rounded-xl mb-4"
             style={{
-              background: 'linear-gradient(135deg, rgba(244,180,42,0.12) 0%, rgba(244,180,42,0.04) 100%)',
-              border: '1px solid rgba(244,180,42,0.3)',
+              background: 'linear-gradient(135deg, rgba(78,140,255,0.12) 0%, rgba(78,140,255,0.04) 100%)',
+              border: '1px solid rgba(78,140,255,0.3)',
             }}
           >
             <div
               className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ background: 'rgba(244,180,42,0.15)' }}
+              style={{ background: 'rgba(78,140,255,0.15)' }}
             >
               <TrophyIcon size={20} />
             </div>

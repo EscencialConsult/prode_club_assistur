@@ -152,14 +152,14 @@ function PartidoRow({ match, pred }) {
 function BetCardItem({ bet, predsDeLaApuesta, expanded, onToggle }) {
     const open = isBetOpen(bet)
     const estado = bet.estado === 'finalizada'
-        ? { label: 'FINALIZADA', color: 'var(--color-warn)', bg: 'rgba(244,180,42,0.1)', border: 'rgba(244,180,42,0.3)' }
+        ? { label: 'FINALIZADA', color: 'var(--color-warn)', bg: 'rgba(78,140,255,0.1)', border: 'rgba(78,140,255,0.3)' }
         : open
             ? { label: 'ACTIVA', color: 'var(--color-accent)', bg: 'rgba(34,217,223,0.1)', border: 'rgba(34,217,223,0.3)' }
             : { label: 'CERRADA', color: 'var(--color-text-muted)', bg: 'rgba(132,153,194,0.1)', border: 'var(--color-border)' }
 
     const esGrupal = bet.tipo === 'grupos'
     const tipo = esGrupal
-        ? { label: 'GRUPAL', color: 'var(--color-warn)', bg: 'rgba(244,180,42,0.1)', border: 'rgba(244,180,42,0.3)' }
+        ? { label: 'GRUPAL', color: 'var(--color-warn)', bg: 'rgba(78,140,255,0.1)', border: 'rgba(78,140,255,0.3)' }
         : { label: 'INDIVIDUAL', color: 'var(--color-accent)', bg: 'rgba(34,217,223,0.08)', border: 'rgba(34,217,223,0.25)' }
 
     // Contar predicciones de este bet

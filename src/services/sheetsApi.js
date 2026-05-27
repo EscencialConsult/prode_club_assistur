@@ -98,11 +98,11 @@ function mostrarAvisoSesionExpirada() {
     <div style="text-align: center; color: #fff; max-width: 320px; padding: 1.5rem;">
       <div style="
         width: 56px; height: 56px; border-radius: 50%;
-        background: rgba(235,195,43,.15);
-        border: 1px solid rgba(235,195,43,.4);
+        background: rgba(78,140,255,.15);
+        border: 1px solid rgba(78,140,255,.4);
         margin: 0 auto 1rem;
         display: flex; align-items: center; justify-content: center;">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ebc32b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4e8cff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
           <polyline points="12 6 12 12 16 14"/>
         </svg>
@@ -320,11 +320,17 @@ const auth = {
     return { ok: true }
   },
 
-  registro: async (nombre, email, password) => {
+  registro: async (nombre, email, password, celular, dni) => {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
-      options: { data: { nombre: nombre.trim() } },
+      options: {
+        data: {
+          nombre: nombre.trim(),
+          celular: (celular || '').trim(),
+          dni: (dni || '').trim(),
+        },
+      },
     })
     if (error) throw new Error(traducirErrorAuth(error))
     return {

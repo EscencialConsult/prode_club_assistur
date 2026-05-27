@@ -103,7 +103,7 @@ export default function RankingPageAdmin() {
                     cursor:'pointer',
                     transition:'all .2s',
                   }}
-                  onMouseEnter={e => {e.currentTarget.style.borderColor='#ebc32b';e.currentTarget.style.boxShadow='0 4px 16px rgba(235,195,43,.15)'}}
+                  onMouseEnter={e => {e.currentTarget.style.borderColor='#4e8cff';e.currentTarget.style.boxShadow='0 4px 16px rgba(78,140,255,.15)'}}
                   onMouseLeave={e => {e.currentTarget.style.borderColor='#f0eadb';e.currentTarget.style.boxShadow='none'}}
                 >
                   <div>
@@ -120,8 +120,8 @@ export default function RankingPageAdmin() {
                       fontWeight:700,
                       padding:'.3rem .7rem',
                       borderRadius:99,
-                      background: activa ? 'rgba(34,197,94,.1)' : 'rgba(235,195,43,.1)',
-                      color: activa ? '#22c55e' : '#c99f16',
+                      background: activa ? 'rgba(34,197,94,.1)' : 'rgba(78,140,255,.1)',
+                      color: activa ? '#22c55e' : '#0041f0',
                     }}>
                       {activa ? 'ACTIVA' : bet.estado === 'finalizada' ? 'FINALIZADA' : 'CERRADA'}
                     </span>
@@ -190,7 +190,7 @@ export default function RankingPageAdmin() {
                       </div>
 
                       <div style={{display:'flex',gap:'.4rem',justifyContent:'center'}}>
-                        {[{v:u.aciertos_exactos,c:'#22c55e'},{v:u.aciertos_diferencia||0,c:'#ebc32b'}].map((x,i) => (
+                        {[{v:u.aciertos_exactos,c:'#22c55e'},{v:u.aciertos_diferencia||0,c:'#4e8cff'}].map((x,i) => (
                           x.v > 0 && (
                             <span key={i} style={{
                               display:'flex',alignItems:'center',justifyContent:'center',

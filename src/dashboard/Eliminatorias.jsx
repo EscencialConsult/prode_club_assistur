@@ -23,8 +23,8 @@ const C = {
   steel:    '#5f6e8a',
   mute:     '#a8b2c4',
   line:     '#e7dec6',
-  gold:     '#d4a017',
-  goldHi:   '#ebc32b',
+  gold:     '#0041f0',
+  goldHi:   '#4e8cff',
   goldDeep: '#a87a0b',
   red:      '#e03252',
 }

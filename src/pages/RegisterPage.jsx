@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import sheetsApi from '../services/sheetsApi.js'
 
 export default function RegisterPage() {
-  const [form, setForm]       = useState({ nombre: '', email: '', password: '' })
+  const [form, setForm]       = useState({ nombre: '', email: '', password: '', celular: '', dni: '' })
   const [done, setDone]       = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState(null)
@@ -13,7 +13,7 @@ export default function RegisterPage() {
     setLoading(true)
     setError(null)
     try {
-      await sheetsApi.auth.registro(form.nombre, form.email, form.password)
+      await sheetsApi.auth.registro(form.nombre, form.email, form.password, form.celular, form.dni)
       setDone(true)
     } catch (err) {
       setError(err.message || 'No se pudo completar el registro')
@@ -27,12 +27,12 @@ export default function RegisterPage() {
     background: 'rgba(255,255,255,.06)',
     border: '1px solid rgba(255,255,255,.1)',
     color: '#fff',
-    caretColor: '#ebc32b',
+    caretColor: '#4e8cff',
   }
   const onFocus = e => {
-    e.target.style.borderColor = 'rgba(235,195,43,.55)'
-    e.target.style.background  = 'rgba(235,195,43,.06)'
-    e.target.style.boxShadow   = '0 0 0 3px rgba(235,195,43,.1)'
+    e.target.style.borderColor = 'rgba(78,140,255,.55)'
+    e.target.style.background  = 'rgba(78,140,255,.06)'
+    e.target.style.boxShadow   = '0 0 0 3px rgba(78,140,255,.1)'
   }
   const onBlur = e => {
     e.target.style.borderColor = 'rgba(255,255,255,.1)'
@@ -67,7 +67,7 @@ export default function RegisterPage() {
       >
         {/* Gold glow */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 55% 45% at 20% 25%, rgba(235,195,43,.16), transparent 55%)'
+          background: 'radial-gradient(ellipse 55% 45% at 20% 25%, rgba(78,140,255,.16), transparent 55%)'
         }} />
         {/* Blue glow */}
         <div className="absolute inset-0 pointer-events-none" style={{
@@ -90,16 +90,16 @@ export default function RegisterPage() {
           style={{
             maxWidth: 420,
             background: 'linear-gradient(160deg, rgba(12,24,43,.92) 0%, rgba(5,9,15,.96) 100%)',
-            border: '1px solid rgba(235,195,43,.25)',
+            border: '1px solid rgba(78,140,255,.25)',
             borderRadius: 20,
-            boxShadow: '0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(235,195,43,.08), inset 0 1px 0 rgba(255,255,255,.05)',
+            boxShadow: '0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(78,140,255,.08), inset 0 1px 0 rgba(255,255,255,.05)',
             backdropFilter: 'blur(24px)',
             animationDelay: '.1s',
           }}
         >
           {/* Gold top accent */}
           <div className="rounded-t-[20px] h-0.5 w-full"
-            style={{ background: 'linear-gradient(90deg, transparent, #ebc32b 30%, #ebc32b 70%, transparent)' }} />
+            style={{ background: 'linear-gradient(90deg, transparent, #4e8cff 30%, #4e8cff 70%, transparent)' }} />
 
           <div className="px-8 py-8">
 
@@ -108,8 +108,8 @@ export default function RegisterPage() {
               <div className="text-center py-4">
                 {/* Check ring */}
                 <div className="rp-pop w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, rgba(235,195,43,.25), rgba(235,195,43,.1))', border: '2px solid rgba(235,195,43,.5)', boxShadow: '0 0 0 6px rgba(235,195,43,.08)' }}>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ebc32b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  style={{ background: 'linear-gradient(135deg, rgba(78,140,255,.25), rgba(78,140,255,.1))', border: '2px solid rgba(78,140,255,.5)', boxShadow: '0 0 0 6px rgba(78,140,255,.08)' }}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4e8cff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
@@ -119,7 +119,7 @@ export default function RegisterPage() {
                 </h2>
 
                 <p className="font-body text-sm leading-relaxed mb-2 max-w-xs mx-auto" style={{ color: 'rgba(255,255,255,.55)' }}>
-                  Tu cuenta está <strong style={{ color: '#ebc32b' }}>pendiente de aprobación</strong> por el administrador.
+                  Tu cuenta está <strong style={{ color: '#4e8cff' }}>pendiente de aprobación</strong> por el administrador.
                 </p>
                 <p className="font-body text-sm leading-relaxed mb-8 max-w-xs mx-auto" style={{ color: 'rgba(255,255,255,.4)' }}>
                   Te avisaremos cuando esté activa y ya puedas ingresar.
@@ -127,14 +127,14 @@ export default function RegisterPage() {
 
                 {/* Divider */}
                 <div className="h-px mb-6 mx-auto w-3/4"
-                  style={{ background: 'linear-gradient(90deg, transparent, rgba(235,195,43,.2), transparent)' }} />
+                  style={{ background: 'linear-gradient(90deg, transparent, rgba(78,140,255,.2), transparent)' }} />
 
                 <Link
                   to="/login"
                   className="inline-flex items-center gap-2 font-body font-bold text-sm px-6 py-3 rounded-full transition-all"
-                  style={{ background: '#ebc32b', color: '#05090f', textDecoration: 'none', boxShadow: '0 6px 20px rgba(235,195,43,.28)' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#f5d75a'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#ebc32b'; e.currentTarget.style.transform = '' }}
+                  style={{ background: '#4e8cff', color: '#05090f', textDecoration: 'none', boxShadow: '0 6px 20px rgba(78,140,255,.28)' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#4e8cff'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#4e8cff'; e.currentTarget.style.transform = '' }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
@@ -150,7 +150,7 @@ export default function RegisterPage() {
                 <div className="mb-7">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-400 rp-pulse" />
-                    <span className="font-body text-xs uppercase tracking-widest font-bold" style={{ color: 'rgba(235,195,43,.7)' }}>
+                    <span className="font-body text-xs uppercase tracking-widest font-bold" style={{ color: 'rgba(78,140,255,.7)' }}>
                       Mundial 2026
                     </span>
                   </div>
@@ -163,7 +163,7 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Divider */}
-                <div className="h-px mb-7" style={{ background: 'linear-gradient(90deg, transparent, rgba(235,195,43,.2) 50%, transparent)' }} />
+                <div className="h-px mb-7" style={{ background: 'linear-gradient(90deg, transparent, rgba(78,140,255,.2) 50%, transparent)' }} />
 
                 <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -171,7 +171,7 @@ export default function RegisterPage() {
                   <div>
                     <label htmlFor="nombre"
                       className="block font-body font-bold text-xs uppercase tracking-widest mb-2"
-                      style={{ color: 'rgba(235,195,43,.8)' }}>
+                      style={{ color: 'rgba(78,140,255,.8)' }}>
                       Nombre completo
                     </label>
                     <input
@@ -194,7 +194,7 @@ export default function RegisterPage() {
                   <div>
                     <label htmlFor="email"
                       className="block font-body font-bold text-xs uppercase tracking-widest mb-2"
-                      style={{ color: 'rgba(235,195,43,.8)' }}>
+                      style={{ color: 'rgba(78,140,255,.8)' }}>
                       Email
                     </label>
                     <input
@@ -212,11 +212,61 @@ export default function RegisterPage() {
                     />
                   </div>
 
+                  {/* Celular */}
+                  <div>
+                    <label htmlFor="celular"
+                      className="block font-body font-bold text-xs uppercase tracking-widest mb-2"
+                      style={{ color: 'rgba(78,140,255,.8)' }}>
+                      Celular
+                    </label>
+                    <input
+                      id="celular"
+                      type="tel"
+                      inputMode="tel"
+                      value={form.celular}
+                      onChange={e => setForm(p => ({ ...p, celular: e.target.value }))}
+                      placeholder="11 1234 5678"
+                      required
+                      minLength={8}
+                      maxLength={20}
+                      autoComplete="tel"
+                      className="w-full px-4 py-3.5 rounded-xl font-body text-sm outline-none transition-all"
+                      style={inputStyle}
+                      onFocus={onFocus}
+                      onBlur={onBlur}
+                    />
+                  </div>
+
+                  {/* DNI */}
+                  <div>
+                    <label htmlFor="dni"
+                      className="block font-body font-bold text-xs uppercase tracking-widest mb-2"
+                      style={{ color: 'rgba(78,140,255,.8)' }}>
+                      DNI
+                    </label>
+                    <input
+                      id="dni"
+                      type="text"
+                      inputMode="numeric"
+                      value={form.dni}
+                      onChange={e => setForm(p => ({ ...p, dni: e.target.value.replace(/\D/g, '').slice(0, 9) }))}
+                      placeholder="12345678"
+                      required
+                      minLength={7}
+                      maxLength={9}
+                      autoComplete="off"
+                      className="w-full px-4 py-3.5 rounded-xl font-body text-sm outline-none transition-all"
+                      style={inputStyle}
+                      onFocus={onFocus}
+                      onBlur={onBlur}
+                    />
+                  </div>
+
                   {/* Contraseña */}
                   <div>
                     <label htmlFor="password"
                       className="block font-body font-bold text-xs uppercase tracking-widest mb-2"
-                      style={{ color: 'rgba(235,195,43,.8)' }}>
+                      style={{ color: 'rgba(78,140,255,.8)' }}>
                       Contraseña
                     </label>
                     <input
@@ -254,9 +304,9 @@ export default function RegisterPage() {
                     type="submit"
                     disabled={loading}
                     className="w-full font-body font-bold text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ background: '#ebc32b', color: '#05090f', boxShadow: '0 8px 28px rgba(235,195,43,.3)' }}
-                    onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = '#f5d75a'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 36px rgba(235,195,43,.45)' } }}
-                    onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = '#ebc32b'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 8px 28px rgba(235,195,43,.3)' } }}
+                    style={{ background: '#4e8cff', color: '#05090f', boxShadow: '0 8px 28px rgba(78,140,255,.3)' }}
+                    onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = '#4e8cff'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 36px rgba(78,140,255,.45)' } }}
+                    onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = '#4e8cff'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 8px 28px rgba(78,140,255,.3)' } }}
                   >
                     {loading ? (
                       <>
@@ -286,7 +336,7 @@ export default function RegisterPage() {
                   to="/login"
                   className="block w-full font-body font-semibold text-sm py-3.5 rounded-full text-center transition-all"
                   style={{ border: '1px solid rgba(255,255,255,.18)', color: 'rgba(255,255,255,.7)', textDecoration: 'none' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(235,195,43,.5)'; e.currentTarget.style.color = '#ebc32b'; e.currentTarget.style.background = 'rgba(235,195,43,.06)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(78,140,255,.5)'; e.currentTarget.style.color = '#4e8cff'; e.currentTarget.style.background = 'rgba(78,140,255,.06)' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,.18)'; e.currentTarget.style.color = 'rgba(255,255,255,.7)'; e.currentTarget.style.background = 'transparent' }}
                 >
                   Ya tengo cuenta — Iniciar sesión
@@ -302,7 +352,7 @@ export default function RegisterPage() {
             <Link to="/"
               className="font-body text-sm flex items-center gap-1.5 transition-colors"
               style={{ color: 'rgba(255,255,255,.38)', textDecoration: 'none' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#ebc32b' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#4e8cff' }}
               onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,.38)' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>

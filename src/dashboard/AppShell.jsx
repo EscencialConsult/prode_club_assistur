@@ -49,9 +49,9 @@ function NavLink({ to, label, icon, location }) {
           fontSize: '.75rem',
           letterSpacing: '.05em',
           textTransform: 'uppercase',
-          color: a ? '#ebc32b' : 'rgba(255,255,255,.45)',
-          background: a ? 'rgba(235,195,43,.12)' : 'transparent',
-          border: a ? '1px solid rgba(235,195,43,.28)' : '1px solid transparent',
+          color: a ? '#4e8cff' : 'rgba(255,255,255,.45)',
+          background: a ? 'rgba(78,140,255,.12)' : 'transparent',
+          border: a ? '1px solid rgba(78,140,255,.28)' : '1px solid transparent',
           transition: 'all .16s',
           cursor: 'pointer',
         }}
@@ -68,7 +68,7 @@ function NavLink({ to, label, icon, location }) {
           }
         }}
       >
-        <span style={{ color: a ? '#ebc32b' : 'inherit', display: 'flex', opacity: a ? 1 : .65 }}>
+        <span style={{ color: a ? '#4e8cff' : 'inherit', display: 'flex', opacity: a ? 1 : .65 }}>
           {icon}
         </span>
         {label}
@@ -91,11 +91,11 @@ function NavLinkMob({ to, label, icon, location, onClick }) {
           borderRadius: 8,
           fontWeight: 600,
           fontSize: '.85rem',
-          color: a ? '#ebc32b' : 'rgba(255,255,255,.6)',
-          background: a ? 'rgba(235,195,43,.1)' : 'transparent',
+          color: a ? '#4e8cff' : 'rgba(255,255,255,.6)',
+          background: a ? 'rgba(78,140,255,.1)' : 'transparent',
         }}
       >
-        <span style={{ color: a ? '#ebc32b' : 'inherit', display: 'flex' }}>{icon}</span>
+        <span style={{ color: a ? '#4e8cff' : 'inherit', display: 'flex' }}>{icon}</span>
         {label}
       </span>
     </Link>
@@ -211,7 +211,7 @@ export default function AppShell({ children }) {
             background: '#0c182b',
             flexShrink: 0,
             zIndex: 50,
-            borderBottom: '1px solid rgba(235,195,43,.14)',
+            borderBottom: '1px solid rgba(78,140,255,.14)',
           }}
         >
 <div
@@ -263,19 +263,19 @@ export default function AppShell({ children }) {
         fontSize: '.72rem',
         letterSpacing: '.06em',
         textTransform: 'uppercase',
-        color: location.pathname === '/manual-admin' ? '#0c182b' : '#ebc32b',
-        background: location.pathname === '/manual-admin' ? '#ebc32b' : 'transparent',
-        border: '1.5px solid #ebc32b',
+        color: location.pathname === '/manual-admin' ? '#0c182b' : '#4e8cff',
+        background: location.pathname === '/manual-admin' ? '#4e8cff' : 'transparent',
+        border: '1.5px solid #4e8cff',
         transition: 'all .16s',
         cursor: 'pointer',
         boxShadow: location.pathname === '/manual-admin'
-          ? '0 0 0 3px rgba(235,195,43,.18)'
+          ? '0 0 0 3px rgba(78,140,255,.18)'
           : 'none',
       }}
       onMouseEnter={e => {
         if (location.pathname !== '/manual-admin') {
-          e.currentTarget.style.background = 'rgba(235,195,43,.14)'
-          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(235,195,43,.1)'
+          e.currentTarget.style.background = 'rgba(78,140,255,.14)'
+          e.currentTarget.style.boxShadow = '0 0 0 3px rgba(78,140,255,.1)'
         }
       }}
       onMouseLeave={e => {
@@ -333,7 +333,7 @@ export default function AppShell({ children }) {
                     width: 27,
                     height: 27,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg,#ebc32b,#c99f16)',
+                    background: 'linear-gradient(135deg,#4e8cff,#0041f0)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -561,7 +561,7 @@ export default function AppShell({ children }) {
           {mob && (
             <div
               style={{
-                borderTop: '1px solid rgba(235,195,43,.1)',
+                borderTop: '1px solid rgba(78,140,255,.1)',
                 padding: '.55rem 1rem .75rem',
                 display: 'flex',
                 flexDirection: 'column',
@@ -687,15 +687,15 @@ export default function AppShell({ children }) {
                 width: 56,
                 height: 56,
                 borderRadius: '50%',
-                background: 'rgba(235,195,43,.15)',
-                border: '1px solid rgba(235,195,43,.4)',
+                background: 'rgba(78,140,255,.15)',
+                border: '1px solid rgba(78,140,255,.4)',
                 margin: '0 auto 1rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ebc32b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4e8cff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
