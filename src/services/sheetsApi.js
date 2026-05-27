@@ -333,6 +333,16 @@ const auth = {
       },
     })
     if (error) throw new Error(traducirErrorAuth(error))
+    // Guardar celular y dni en public.usuarios (el trigger no los copia)
+    if (data.user) {
+      await supabase
+        .from('usuarios')
+        .update({
+          celular: (celular || '').trim(),
+          dni:     (dni     || '').trim(),
+        })
+        .eq('id', data.user.id)
+    }
     return {
       ok: true,
       message: 'Registro exitoso. Tu cuenta está pendiente de aprobación por el administrador.',
