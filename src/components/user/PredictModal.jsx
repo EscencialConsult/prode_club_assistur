@@ -533,8 +533,63 @@ export default function PredictModal({ bet, onSubmit, onClose, loading }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-[1fr_auto_1fr] items-center">
-                    <div className="flex items-center gap-2.5 p-3 bg-gradient-to-r from-slate-50 to-white border-r border-slate-200">
+                  {/* MOBILE LAYOUT: equipos apilados verticalmente con su marcador a la derecha */}
+                  <div className="sm:hidden">
+                    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-slate-50 to-white min-w-0">
+                      {match.bandera_local && (
+                        <img src={match.bandera_local} alt="" className="w-9 h-6 object-cover rounded shadow-sm flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        {match.codigo_local && (
+                          <div className="text-[9px] font-black tracking-wider text-blue-600 uppercase mb-0.5">
+                            {match.codigo_local}
+                          </div>
+                        )}
+                        <div className="text-sm font-black text-slate-900 leading-tight truncate">
+                          {match.equipo_local}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={2}
+                        value={sc.local}
+                        onChange={e => updateScore(match.id, 'local', e.target.value)}
+                        placeholder="—"
+                        disabled={isDisabled}
+                        className="w-12 h-12 text-xl text-center font-black bg-slate-900 text-white border-2 border-blue-400 rounded-lg outline-none transition-all focus:border-blue-300 focus:shadow-lg focus:shadow-blue-500/30 disabled:bg-slate-200 disabled:text-slate-400 disabled:border-slate-300 disabled:cursor-not-allowed tabular-nums flex-shrink-0"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-slate-50 to-white min-w-0 border-t border-slate-200">
+                      {match.bandera_visitante && (
+                        <img src={match.bandera_visitante} alt="" className="w-9 h-6 object-cover rounded shadow-sm flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        {match.codigo_visitante && (
+                          <div className="text-[9px] font-black tracking-wider text-blue-600 uppercase mb-0.5">
+                            {match.codigo_visitante}
+                          </div>
+                        )}
+                        <div className="text-sm font-black text-slate-900 leading-tight truncate">
+                          {match.equipo_visitante}
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={2}
+                        value={sc.visitante}
+                        onChange={e => updateScore(match.id, 'visitante', e.target.value)}
+                        placeholder="—"
+                        disabled={isDisabled}
+                        className="w-12 h-12 text-xl text-center font-black bg-slate-900 text-white border-2 border-blue-400 rounded-lg outline-none transition-all focus:border-blue-300 focus:shadow-lg focus:shadow-blue-500/30 disabled:bg-slate-200 disabled:text-slate-400 disabled:border-slate-300 disabled:cursor-not-allowed tabular-nums flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* TABLET/DESKTOP LAYOUT: 3 columnas horizontales */}
+                  <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center">
+                    <div className="flex items-center gap-2.5 p-3 bg-gradient-to-r from-slate-50 to-white border-r border-slate-200 min-w-0">
                       {match.bandera_local && (
                         <img src={match.bandera_local} alt="" className="w-10 h-7 object-cover rounded shadow-sm flex-shrink-0" />
                       )}
@@ -574,7 +629,7 @@ export default function PredictModal({ bet, onSubmit, onClose, loading }) {
                       />
                     </div>
 
-                    <div className="flex items-center gap-2.5 p-3 text-right bg-gradient-to-l from-slate-50 to-white border-l border-slate-200">
+                    <div className="flex items-center gap-2.5 p-3 text-right bg-gradient-to-l from-slate-50 to-white border-l border-slate-200 min-w-0">
                       <div className="flex-1 min-w-0">
                         {match.codigo_visitante && (
                           <div className="text-[9px] font-black tracking-wider text-blue-600 uppercase mb-0.5">
