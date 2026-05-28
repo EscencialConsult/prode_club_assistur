@@ -332,7 +332,7 @@ const auth = {
         },
       },
     })
-    if (error) throw new Error(traducirErrorAuth(error))
+    if (error && !error.message?.includes('sending')) throw new Error(traducirErrorAuth(error))
     // Guardar celular y dni en public.usuarios (el trigger no los copia)
     if (data.user) {
       await supabase
