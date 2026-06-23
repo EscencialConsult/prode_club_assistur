@@ -6,7 +6,7 @@ function getBetStatus(bet) {
     return { color: '#1b8a5a', bg: 'rgba(27,138,90,.08)', border: 'rgba(27,138,90,.2)', label: 'Activa', dot: true }
   if (bet.estado === 'finalizada')
     return { color: '#0041f0', bg: 'rgba(78,140,255,.1)', border: 'rgba(78,140,255,.25)', label: 'Finalizada', dot: false }
-  if (bet.estado === 'cerrada')
+  if (bet.estado === 'cerrada' || !isBetOpen(bet))
     return { color: '#5f6e8a', bg: 'rgba(95,110,138,.06)', border: 'rgba(95,110,138,.15)', label: 'Cerrada', dot: false }
   return { color: '#5f6e8a', bg: 'rgba(95,110,138,.06)', border: 'rgba(95,110,138,.12)', label: bet.estado || '—', dot: false }
 }
@@ -112,7 +112,7 @@ function BetRow({ bet, onClose, onFinalize }) {
 
 export default function BetsTab({ bets, loading, createBet, matches, closeBet, finalizeBet }) {
   const openBets     = bets.filter(b => isBetOpen(b))
-  const closedBets   = bets.filter(b => b.estado === 'cerrada' && !isBetOpen(b))
+  const closedBets   = bets.filter(b => b.estado !== 'finalizada' && !isBetOpen(b))
   const finishedBets = bets.filter(b => b.estado === 'finalizada')
 
 

@@ -156,9 +156,12 @@ export function isoUtcAInputLocal(iso) {
    APUESTAS
    ══════════════════════════════════════════════════════════ */
 
-/** Devuelve true si una apuesta está abierta */
+/** Devuelve true si una apuesta está abierta (estado 'abierta' Y no vencida por fecha) */
 export function isBetOpen(bet) {
-  return bet.estado === 'abierta'
+  if (!bet || bet.estado !== 'abierta') return false
+  const ts = fechaArgentinaATimestamp(bet.fecha_cierre)
+  if (ts === null) return true   // sin fecha de cierre válida: depende solo del estado
+  return ts > Date.now()
 }
 
 /** Clases CSS para el estado de una apuesta */
