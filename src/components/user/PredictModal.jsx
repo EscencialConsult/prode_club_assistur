@@ -477,6 +477,9 @@ export default function PredictModal({ bet, onSubmit, onClose, loading }) {
             )}
 
             {bet.partidos?.map((match, idx) => {
+              const esTBD = !match.equipo_local || !match.equipo_visitante ||
+                match.equipo_local === 'TBD' || match.equipo_visitante === 'TBD' ||
+                match.codigo_local === 'TBD' || match.codigo_visitante === 'TBD'
               const isLive = match.estado === 'en_vivo'
               const isFinished = match.estado === 'finalizado'
               const isDisabled = !open || isLive || isFinished || estaBloqueado
@@ -533,6 +536,17 @@ export default function PredictModal({ bet, onSubmit, onClose, loading }) {
                     </div>
                   </div>
 
+                  {esTBD ? (
+                    <div className="px-4 py-5 bg-blue-50 border-t border-blue-200 text-center">
+                      <div className="text-sm font-black text-blue-900">
+                        ⏳ Partido pendiente de confirmación
+                      </div>
+                      <p className="mt-1.5 mb-0 text-xs leading-relaxed text-blue-800">
+                        Los equipos de este partido aún no están confirmados oficialmente. Se habilitará para votar automáticamente cuando se confirmen.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
                   {/* MOBILE LAYOUT: equipos apilados verticalmente con su marcador a la derecha */}
                   <div className="sm:hidden">
                     <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-slate-50 to-white min-w-0">
@@ -743,6 +757,8 @@ export default function PredictModal({ bet, onSubmit, onClose, loading }) {
                           )}
                       </div>
                     </div>
+                  )}
+                    </>
                   )}
                 </div>
               )
